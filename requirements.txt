@@ -1,0 +1,11 @@
+pandas
+numpy
+requests
+sqlalchemy
+psycopg2-binary
+psycopg2
+pymongo
+pyspark
+apache-airflow
+matplotlib
+ipykernel

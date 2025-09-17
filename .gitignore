@@ -1,0 +1,36 @@
+# --- Python ---
+__pycache__/
+.Python
+.venv/
+venv/
+env/
+ENV/
+sql_inserts.py
+
+# --- Jupyter / IPython ---
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# --- Data files ---
+data/*
+
+# --- SQL & DB files ---
+*.sqlite
+*.db
+*.sql~      # backup files
+*.sql.tmp
+inserts.sql
+
+# --- Config / Secrets ---
+*.yaml
+*.yml
+.env
+
+
+# --- Airflow ---
+airflow/logs/
+airflow/dags/__pycache__/
+
+# VS Code workspace
+*.code-workspace
+.vscode/
