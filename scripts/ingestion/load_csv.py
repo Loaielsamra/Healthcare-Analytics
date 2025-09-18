@@ -63,6 +63,7 @@ appointments.columns = appointments.columns.str.lower()
 
 patients = patients.rename(
     columns={
+        "patientid": "patient_id",
         "hipertension": "hypertension",
         "handcap": "handicap",
         "neighbourhood": "neighborhood",
@@ -117,7 +118,7 @@ appointments["sms_received"] = appointments["sms_received"].apply(
 # Re-Order Columns
 patients = patients[
     [
-        "patientid",
+        "patient_id",
         "gender",
         "age",
         "age_group",

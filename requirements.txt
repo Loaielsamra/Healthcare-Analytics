@@ -9,3 +9,4 @@ pyspark
 apache-airflow
 matplotlib
 ipykernel
+pymongo
