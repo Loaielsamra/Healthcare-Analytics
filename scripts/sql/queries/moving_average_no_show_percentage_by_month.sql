@@ -1,19 +1,19 @@
 WITH monthly_rates AS (
     SELECT 
-        DATE_TRUNC('month', appointment_day) AS month,
+        CAST(FORMAT(a.appointment_day, 'yyyy-MM-01') AS DATE) AS month,
         ROUND(
-            SUM(CASE WHEN attended = FALSE THEN 1 ELSE 0 END)::numeric / COUNT(*) * 100,
+            SUM(CASE WHEN a.attended = 0 THEN 1 ELSE 0 END) * 100.0 / COUNT(*),
             2
         ) AS no_show_rate
-    FROM appointments
-    GROUP BY DATE_TRUNC('month', appointment_day)
+    FROM appointments a
+    GROUP BY CAST(FORMAT(a.appointment_day, 'yyyy-MM-01') AS DATE)
 )
 SELECT
     month,
     no_show_rate,
     ROUND(
         AVG(no_show_rate) OVER (
-            ORDER BY month 
+            ORDER BY month
             ROWS BETWEEN 2 PRECEDING AND CURRENT ROW
         ), 2
     ) AS moving_avg_no_show

@@ -10,3 +10,4 @@ apache-airflow
 matplotlib
 ipykernel
 pymongo
+pyodbc

@@ -7,7 +7,6 @@ appointments = pd.read_csv("data/raw/noshowappointments.csv")
 resp = requests.get("https://randomuser.me/api/?results=50&nat=us")
 doctors_raw = resp.json()["results"]
 
-# Create doctors DataFrame
 specializations = ["Cardiology", "Dermatology", "Neurology", "General", "Pediatrics"]
 doctors = pd.DataFrame(
     [
@@ -21,15 +20,14 @@ doctors = pd.DataFrame(
     ]
 )
 
-# Assign random doctors to appointments
 appointments["doctor_id"] = appointments.index.map(
     lambda x: random.choice(doctors["doctor_id"].tolist())
 )
+
 appointments["ScheduledDay"] = pd.to_datetime(appointments["ScheduledDay"])
 appointments["AppointmentDay"] = pd.to_datetime(appointments["AppointmentDay"])
 appointments = appointments[appointments["Age"] >= 0]
 
-# Clean and transform patients data
 patients = appointments[
     [
         "PatientId",
@@ -44,21 +42,7 @@ patients = appointments[
     ]
 ].drop_duplicates(subset=["PatientId"], keep="last")
 
-patients = patients[patients["Age"] >= 0]
-
-pat_num_cols = [
-    "Scholarship",
-    "Hipertension",
-    "Diabetes",
-    "Alcoholism",
-    "Handcap",
-]
-
-for col in pat_num_cols:
-    patients[col] = patients[col].apply(lambda x: "TRUE" if x == 1 else "FALSE")
-
 patients.columns = patients.columns.str.lower()
-
 appointments.columns = appointments.columns.str.lower()
 
 patients = patients.rename(
@@ -90,32 +74,34 @@ def age_group(age):
         return "Senior"
 
 
+patients = patients[patients["age"] >= 0]
 patients["age_group"] = patients["age"].apply(age_group)
 
-# Additional features to appointments
 appointments["appointment_dayofweek"] = appointments["appointment_day"].dt.day_name()
-
 appointments["appointment_duration_days"] = (
     appointments["appointment_day"] - appointments["scheduled_day"]
 ).dt.days
 appointments = appointments[appointments["appointment_duration_days"] >= 0]
 
 appointments["late_scheduling"] = appointments["appointment_duration_days"].apply(
-    lambda x: "TRUE" if x < 1 else "FALSE"
+    lambda x: 1 if x < 1 else 0
 )
 
-appointments["no_show"] = appointments["no_show"].map({"Yes": "TRUE", "No": "FALSE"})
-appointments["attended"] = appointments["no_show"].apply(
-    lambda x: "FALSE" if x == "TRUE" else "TRUE"
+appointments["no_show"] = appointments["no_show"].map({"Yes": 1, "No": 0})
+appointments["attended"] = appointments["no_show"].apply(lambda x: 0 if x == 1 else 1)
+
+appointments["appointment_day"] = (
+    pd.to_datetime(appointments["appointment_day"])
+    .dt.tz_localize(None)
+    .dt.strftime("%Y-%m-%d %H:%M:%S")
 )
 
-
-appointments["sms_received"] = appointments["sms_received"].apply(
-    lambda x: "TRUE" if x == 1 else "FALSE"
+appointments["scheduled_day"] = (
+    pd.to_datetime(appointments["scheduled_day"])
+    .dt.tz_localize(None)
+    .dt.strftime("%Y-%m-%d %H:%M:%S")
 )
 
-
-# Re-Order Columns
 patients = patients[
     [
         "patient_id",
@@ -149,7 +135,6 @@ appointments = appointments[
     ]
 ]
 
-# Save cleaned data to csv files
 patients.to_csv("data/clean/patients.csv", index=False)
 appointments.to_csv("data/clean/appointments.csv", index=False)
 doctors.to_csv("data/clean/doctors.csv", index=False)

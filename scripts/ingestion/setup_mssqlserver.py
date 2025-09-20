@@ -6,45 +6,44 @@ from sqlalchemy import create_engine, text
 with open("config.yaml", "r") as f:
     config = yaml.safe_load(f)
 
-PG_USER = config["postgres"]["user"]
-PG_PASSWORD = config["postgres"]["password"]
-PG_HOST = config["postgres"]["host"]
-PG_PORT = config["postgres"]["port"]
-DB_NAME = config["postgres"]["database"]
+SQL_HOST = config["sqlserver"]["host"]
+SQL_PORT = config["sqlserver"]["port"]
+DB_NAME = config["sqlserver"]["database"]
+DRIVER = config["sqlserver"]["driver"]
 
-RAW_DB_URL = f"postgresql://{PG_USER}:{PG_PASSWORD}@{PG_HOST}:{PG_PORT}/postgres"
-HEALTHCARE_DB_URL = (
-    f"postgresql+psycopg2://{PG_USER}:{PG_PASSWORD}@{PG_HOST}:{PG_PORT}/{DB_NAME}"
-)
+RAW_DB_URL = f"mssql+pyodbc://@{SQL_HOST}/master?driver={DRIVER.replace(' ', '+')}&trusted_connection=yes"
+
+HEALTHCARE_DB_URL = f"mssql+pyodbc://@{SQL_HOST}/{DB_NAME}?driver={DRIVER.replace(' ', '+')}&trusted_connection=yes"
 
 SCHEMA_FILE = "scripts/sql/schema.sql"
 DATA_PATH = "data/clean"
 
 
 def create_database():
+    """Create SQL Server database (if not exists)."""
     engine = create_engine(RAW_DB_URL, isolation_level="AUTOCOMMIT")
     with engine.connect() as conn:
         try:
             conn.execute(text(f"CREATE DATABASE {DB_NAME}"))
             print(f"Database {DB_NAME} created")
         except Exception as e:
-            print(e)
-            raise
+            print(f"Database {DB_NAME} may already exist: {e}")
 
 
 def run_schema():
+    """Run schema.sql on the target database."""
     engine = create_engine(HEALTHCARE_DB_URL)
     with engine.connect() as conn:
         with open(SCHEMA_FILE, "r") as f:
             schema_sql = f.read()
             conn.execute(text(schema_sql))
-            print(" Schema created")
+            print("Schema created")
 
 
 def load_csvs():
+    """Load patients, doctors, appointments CSVs into SQL Server tables."""
     engine = create_engine(HEALTHCARE_DB_URL)
-
-    conn = engine.connect()
+    conn = engine.raw_connection()
 
     patients = pd.read_csv(os.path.join(DATA_PATH, "patients.csv"))
     doctors = pd.read_csv(os.path.join(DATA_PATH, "doctors.csv"))
@@ -63,4 +62,4 @@ def load_csvs():
 if __name__ == "__main__":
     create_database()
     run_schema()
-    # load_csvs()
+    load_csvs()
