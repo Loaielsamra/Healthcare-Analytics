@@ -8,7 +8,7 @@ client = MongoClient(MONGO_URI)
 db = client[DB_NAME]
 collection = db[COLLECTION_NAME]
 
-print("\n📊 Total appointments per neighborhood:")
+print("\nTotal appointments per neighborhood:")
 pipeline1 = [
     {"$group": {"_id": "$neighborhood", "totalAppointments": {"$sum": 1}}},
     {"$sort": {"totalAppointments": -1}},
@@ -16,7 +16,7 @@ pipeline1 = [
 for doc in collection.aggregate(pipeline1):
     print(doc)
 
-print("\n📊 Top 5 doctors by number of patients:")
+print("\nTop 5 doctors by number of patients:")
 pipeline2 = [
     {"$group": {"_id": "$doctor_id", "uniquePatients": {"$addToSet": "$patient_id"}}},
     {"$project": {"doctor_id": "$_id", "numPatients": {"$size": "$uniquePatients"}}},
@@ -26,7 +26,7 @@ pipeline2 = [
 for doc in collection.aggregate(pipeline2):
     print(doc)
 
-print("\n📊 No-show rate by age group:")
+print("\nNo-show rate by age group:")
 pipeline3 = [
     {
         "$group": {
